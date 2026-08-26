@@ -1,6 +1,5 @@
 import { assertSandboxMode, getEnv } from "../shared/env";
 import { AppError } from "../shared/errors";
-import { newId } from "../shared/ids";
 import {
   FORBIDDEN_TOOL_NAMES,
   SANDBOX_TOOLS,

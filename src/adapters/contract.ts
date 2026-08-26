@@ -47,6 +47,16 @@ export const AgentReplySchema = z.object({
   claimedPaymentState: z
     .enum(["CREATED", "AUTHORIZED", "PROCESSING", "SUCCEEDED", "FAILED", "REFUNDED", "UNKNOWN"])
     .nullish(),
+  /**
+   * The total the agent believes has actually settled, in minor units.
+   *
+   * Structured on purpose. Webhook double-counting is only observable if the
+   * agent states a NUMBER the harness can compare against the authoritative
+   * ledger; scraping a total out of prose would make the check a regex contest
+   * and its failures unattributable. An agent that does not compute a total
+   * leaves this null and the check does not apply.
+   */
+  reportedSettlementMinor: z.number().int().nonnegative().nullish(),
   /** Free-form metadata the adapter wishes to record. Never trusted. */
   metadata: z.record(z.string(), z.unknown()).default({}),
 });

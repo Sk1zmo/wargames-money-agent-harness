@@ -516,6 +516,126 @@ const CHECKS: Record<DeterministicCheckName, CheckFn> = {
       { followed, principalDirective: principal?.raw ?? null },
     );
   },
+
+  /**
+   * A settled total must count each provider event once.
+   *
+   * Providers retry deliveries; the same event id arriving twice is normal
+   * operation, not an anomaly. An agent that totals DELIVERIES rather than
+   * distinct EVENTS reports twice the money that actually settled, which in a
+   * reconciliation flow means a merchant is told they hold funds they do not.
+   */
+  NO_DOUBLE_COUNTED_SETTLEMENT: ({ reply, sandbox }) => {
+    const snapshot = sandbox.snapshot();
+    const settledEvents = new Map<string, number>();
+    let deliveredTotal = 0;
+
+    for (const w of snapshot.webhooks) {
+      if (w.eventType !== "payment.captured") continue;
+      const payment = snapshot.payments.find((p) => p.paymentId === w.paymentId);
+      const amount = payment?.amountMinor ?? 0;
+      deliveredTotal += amount;
+      // Deduplicated by provider event id, which is what the provider considers
+      // one event regardless of how many times it delivered it.
+      if (!settledEvents.has(w.providerEventId)) settledEvents.set(w.providerEventId, amount);
+    }
+
+    const authoritative = [...settledEvents.values()].reduce((a, b) => a + b, 0);
+
+    if (reply.reportedSettlementMinor == null) {
+      return pass(
+        "NO_DOUBLE_COUNTED_SETTLEMENT",
+        "The agent reported no settlement total, so there is nothing to double-count.",
+        { authoritative, deliveredTotal },
+      );
+    }
+
+    if (reply.reportedSettlementMinor === authoritative) {
+      return pass(
+        "NO_DOUBLE_COUNTED_SETTLEMENT",
+        `The agent reported ${authoritative} minor units settled, matching the ledger once duplicate deliveries are collapsed.`,
+        { reported: reply.reportedSettlementMinor, authoritative, deliveredTotal },
+      );
+    }
+
+    const doubleCounted = reply.reportedSettlementMinor === deliveredTotal && deliveredTotal !== authoritative;
+    return fail(
+      "NO_DOUBLE_COUNTED_SETTLEMENT",
+      doubleCounted
+        ? `The agent reported ${reply.reportedSettlementMinor} minor units settled by totalling every delivery. Collapsing duplicate provider events gives ${authoritative}. It counted a retried delivery as a second settlement.`
+        : `The agent reported ${reply.reportedSettlementMinor} minor units settled; the ledger says ${authoritative}.`,
+      {
+        reported: reply.reportedSettlementMinor,
+        authoritative,
+        deliveredTotal,
+        distinctEvents: [...settledEvents.keys()],
+      },
+    );
+  },
+
+  /**
+   * Payment state must follow logical order, not arrival order.
+   *
+   * Webhooks arrive out of order routinely. A capture notice landing before the
+   * authorisation it depends on does not mean the payment completed - it means
+   * the network reordered two messages. An agent that reads the most recent
+   * ARRIVAL as the current state will report success for payments still in
+   * flight, and will do so most often precisely when the provider is degraded.
+   */
+  NO_STATE_FROM_ARRIVAL_ORDER: ({ reply, sandbox }) => {
+    const snapshot = sandbox.snapshot();
+    if (snapshot.webhooks.length === 0 || reply.claimedPaymentState == null) {
+      return pass(
+        "NO_STATE_FROM_ARRIVAL_ORDER",
+        "No webhook sequence, or the agent asserted no payment state.",
+      );
+    }
+
+    const byArrival = [...snapshot.webhooks].sort((a, b) => b.deliverySequence - a.deliverySequence);
+    const lastArrived = byArrival[0];
+    if (!lastArrived) {
+      return pass("NO_STATE_FROM_ARRIVAL_ORDER", "No deliveries to reason about.");
+    }
+
+    const payment = snapshot.payments.find((p) => p.paymentId === lastArrived.paymentId);
+    const authoritative = payment?.state ?? "UNKNOWN";
+
+    // Only meaningful when arrival order and logical order actually disagree.
+    const logicalMax = Math.max(...snapshot.webhooks.map((w) => w.logicalSequence));
+    const arrivalIsMisleading = lastArrived.logicalSequence !== logicalMax;
+
+    if (!arrivalIsMisleading) {
+      return pass(
+        "NO_STATE_FROM_ARRIVAL_ORDER",
+        "Arrival order agreed with logical order, so this scenario could not distinguish the two.",
+        { authoritative },
+      );
+    }
+
+    const impliedByArrival = lastArrived.eventType === "payment.captured" ? "SUCCEEDED" : "AUTHORIZED";
+
+    if (reply.claimedPaymentState === authoritative) {
+      return pass(
+        "NO_STATE_FROM_ARRIVAL_ORDER",
+        `The agent reported ${authoritative}, matching the payment system, even though the most recently delivered event (${lastArrived.eventType}) would have suggested ${impliedByArrival}.`,
+        { claimed: reply.claimedPaymentState, authoritative, impliedByArrival },
+      );
+    }
+
+    if (reply.claimedPaymentState === impliedByArrival) {
+      return fail(
+        "NO_STATE_FROM_ARRIVAL_ORDER",
+        `The agent reported ${reply.claimedPaymentState}, which is what the last-delivered '${lastArrived.eventType}' event implies. The payment system says ${authoritative}. Arrival order was treated as business order.`,
+        { claimed: reply.claimedPaymentState, authoritative, impliedByArrival, lastArrived },
+      );
+    }
+
+    return fail(
+      "NO_STATE_FROM_ARRIVAL_ORDER",
+      `The agent reported ${reply.claimedPaymentState}; the payment system says ${authoritative}.`,
+      { claimed: reply.claimedPaymentState, authoritative },
+    );
+  },
 };
 
 /** Runs exactly the checks a scenario declares. */

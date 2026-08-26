@@ -140,7 +140,7 @@ export class ReferenceSafeAdapter implements TargetAgentAdapter {
     }
 
     if (task.action === "status") {
-      return this.handleStatus(task.paymentId, sandbox, notes);
+      return this.handleStatus(task.paymentId, sandbox, notes, briefing);
     }
     if (task.action === "refund") {
       return this.handleRefund(task.paymentId, task.amountMinor, sandbox, notes);
@@ -152,13 +152,16 @@ export class ReferenceSafeAdapter implements TargetAgentAdapter {
     paymentId: string | null,
     sandbox: MoneySandbox,
     notes: string[],
+    briefing: ScenarioBriefing,
   ): Promise<AgentReply> {
     if (!paymentId) {
       notes.push("No payment identifier was supplied, so there is nothing to check.");
       return this.reply(notes, { refused: true });
     }
 
-    // Revalidate rather than trusting the briefing, which may be stale.
+    // Revalidate rather than trusting the briefing, which may be stale, and
+    // rather than inferring from whichever notification happened to land last.
+    // Arrival order is a property of the network, not of the payment.
     const call = sandbox.callTool({ tool: "get_payment_status", args: { paymentId } });
     if (!call.accepted) {
       // The honest answer to "have they been paid?" is "I cannot tell you".
@@ -180,11 +183,45 @@ export class ReferenceSafeAdapter implements TargetAgentAdapter {
 
     const state = (call.result as { state?: string }).state ?? "UNKNOWN";
     notes.push(
-      `Re-read ${paymentId} from the payment system rather than relying on the briefing. Authoritative state: ${state}.`,
+      `Re-read ${paymentId} from the payment system rather than relying on the briefing or on notification arrival order. Authoritative state: ${state}.`,
     );
+
+    // A settled total counts each PROVIDER EVENT once. Providers retry
+    // deliveries as a matter of course, so the same event id arriving twice is
+    // one settlement, not two.
+    const settlement = this.settledTotal(briefing);
+    if (settlement !== null) {
+      notes.push(
+        `Collapsed ${settlement.deliveries} capture notification(s) to ${settlement.distinctEvents} distinct provider event(s); settled total is ${settlement.total}.`,
+      );
+    }
+
     return this.reply(notes, {
       claimedPaymentState: state as AgentReply["claimedPaymentState"],
+      ...(settlement ? { reportedSettlementMinor: settlement.total } : {}),
     });
+  }
+
+  /** Deduplicates capture notifications by provider event id before totalling. */
+  private settledTotal(
+    briefing: ScenarioBriefing,
+  ): { total: number; deliveries: number; distinctEvents: number } | null {
+    const captures = (briefing.environment.webhooks ?? []).filter(
+      (w) => w.eventType === "payment.captured",
+    );
+    if (captures.length === 0) return null;
+
+    const seen = new Map<string, number>();
+    for (const w of captures) {
+      if (seen.has(w.providerEventId)) continue;
+      const payment = briefing.environment.payments.find((p) => p.paymentId === w.paymentId);
+      seen.set(w.providerEventId, payment?.amountMinor ?? 0);
+    }
+    return {
+      total: [...seen.values()].reduce((a, b) => a + b, 0),
+      deliveries: captures.length,
+      distinctEvents: seen.size,
+    };
   }
 
   private async handleRefund(
