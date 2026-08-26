@@ -40,9 +40,11 @@ async function main(): Promise<void> {
   const heldOut = generateSuite({
     split: "held-out",
     // A different seed, not a different label. Held-out scenarios must be
-    // distinct instances or a held-out score measures nothing.
+    // distinct instances or a held-out score measures nothing. The exclusion
+    // set makes that a guarantee rather than a property of a lucky seed.
     seed: env.SEED + HELD_OUT_SEED_OFFSET,
     variantsPerClass: 3,
+    excludePrompts: new Set(dev.scenarios.map((s) => s.prompt)),
   });
 
   out.write("\nSuites\n");

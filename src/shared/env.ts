@@ -140,9 +140,16 @@ function derive(raw: RawEnv): AppEnv {
 
 let cached: AppEnv | null = null;
 
-export function getEnv(): AppEnv {
-  if (cached) return cached;
-  const parsed = EnvSchema.safeParse(process.env);
+/**
+ * Parses an arbitrary environment source.
+ *
+ * Exported so the mode gate can be tested directly against many candidate
+ * values. Testing it only through `getEnv()` would mean mutating `process.env`
+ * and clearing a module-level cache between cases, which is exactly the setup
+ * where a test quietly stops asserting anything.
+ */
+export function parseEnv(source: Record<string, string | undefined>): AppEnv {
+  const parsed = EnvSchema.safeParse(source);
   if (!parsed.success) {
     const issues = parsed.error.issues
       .map((i) => `  ${i.path.join(".") || "(root)"}: ${i.message}`)
@@ -150,7 +157,12 @@ export function getEnv(): AppEnv {
     // Fail closed: refuse to start rather than run with an unclear posture.
     throw new Error(`Invalid environment configuration:\n${issues}`);
   }
-  cached = derive(parsed.data);
+  return derive(parsed.data);
+}
+
+export function getEnv(): AppEnv {
+  if (cached) return cached;
+  cached = parseEnv(process.env);
   return cached;
 }
 
