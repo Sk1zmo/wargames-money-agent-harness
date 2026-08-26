@@ -95,17 +95,44 @@ async function open(): Promise<Handle> {
 }
 
 /** Applies every generated migration. Safe to call repeatedly. */
+const migrating = new WeakMap<Handle, Promise<void>>();
+
+/**
+ * Applies every generated migration, at most once per handle.
+ *
+ * The in-flight promise is memoised rather than guarded by a boolean set on
+ * completion. A boolean set at the end is not concurrency-safe: a page issuing
+ * several queries at once produces simultaneous calls that all observe
+ * `migrated === false`, all start migrating, and all but the first fail with
+ * `relation "..." already exists`. It is invisible locally, where the database
+ * is usually already migrated on disk, and surfaces as a 500 on the first
+ * request to a cold serverless instance.
+ */
 export async function runMigrations(target?: Handle): Promise<void> {
   const h = target ?? (await getHandle());
   if (h.migrated) return;
-  if (h.driver === "pglite") {
-    await migratePglite(h.db as unknown as PgliteDatabase<typeof schema>, {
-      migrationsFolder: MIGRATIONS_FOLDER,
-    });
-  } else {
-    await migrateNodePg(h.db, { migrationsFolder: MIGRATIONS_FOLDER });
-  }
-  h.migrated = true;
+
+  const inFlight = migrating.get(h);
+  if (inFlight) return inFlight;
+
+  const run = (async () => {
+    if (h.driver === "pglite") {
+      await migratePglite(h.db as unknown as PgliteDatabase<typeof schema>, {
+        migrationsFolder: MIGRATIONS_FOLDER,
+      });
+    } else {
+      await migrateNodePg(h.db, { migrationsFolder: MIGRATIONS_FOLDER });
+    }
+    h.migrated = true;
+  })().catch((error: unknown) => {
+    // A failed migration must not be cached, or the process would serve a
+    // half-built schema for the rest of its life.
+    migrating.delete(h);
+    throw error;
+  });
+
+  migrating.set(h, run);
+  return run;
 }
 
 async function getHandle(): Promise<Handle> {
