@@ -1,5 +1,6 @@
 import { Bot, ShieldAlert, ShieldCheck } from "lucide-react";
-import { getDb, runMigrations } from "@/db/client";
+import { getDb } from "@/db/client";
+import { ensureBootstrapped } from "@/db/bootstrap";
 import { listAgents } from "@/agents/registry";
 import { ADAPTER_DESCRIPTIONS } from "@/adapters/registry";
 import { Empty, Panel } from "@/ui/primitives";
@@ -7,7 +8,7 @@ import { Empty, Panel } from "@/ui/primitives";
 export const dynamic = "force-dynamic";
 
 export default async function AgentsPage() {
-  await runMigrations();
+  await ensureBootstrapped();
   const db = await getDb();
   const agents = await listAgents(db);
 

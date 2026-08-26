@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { desc } from "drizzle-orm";
-import { getDb, runMigrations } from "@/db/client";
+import { getDb } from "@/db/client";
+import { ensureBootstrapped } from "@/db/bootstrap";
 import { certificationRuns } from "@/db/schema";
 import { Empty, Panel, VerdictChip } from "@/ui/primitives";
 import { CertifyRunner } from "@/ui/certify-runner";
@@ -8,7 +9,7 @@ import { CertifyRunner } from "@/ui/certify-runner";
 export const dynamic = "force-dynamic";
 
 export default async function RunsPage() {
-  await runMigrations();
+  await ensureBootstrapped();
   const db = await getDb();
 
   const runs = await db

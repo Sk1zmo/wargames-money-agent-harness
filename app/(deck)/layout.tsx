@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Ban } from "lucide-react";
-import { getDb, runMigrations } from "@/db/client";
+import { getDb } from "@/db/client";
+import { ensureBootstrapped } from "@/db/bootstrap";
 import { environmentStatus } from "@/shared/env";
 import { reviewCounts } from "@/reviews/service";
 import { DeckNav } from "@/ui/nav";
@@ -20,7 +21,7 @@ export default async function DeckLayout({ children }: { children: React.ReactNo
 
   let pending = 0;
   try {
-    await runMigrations();
+    await ensureBootstrapped();
     const db = await getDb();
     pending = (await reviewCounts(db)).PENDING;
   } catch {

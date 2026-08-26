@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { asc, eq } from "drizzle-orm";
-import { getDb, runMigrations } from "@/db/client";
+import { getDb } from "@/db/client";
+import { ensureBootstrapped } from "@/db/bootstrap";
 import {
   agentResponses,
   certificationRuns,
@@ -23,7 +24,7 @@ export async function GET(
   const correlationId = newCorrelationId();
   try {
     const { id } = await context.params;
-    await runMigrations();
+    await ensureBootstrapped();
     const db = await getDb();
 
     const [run] = await db

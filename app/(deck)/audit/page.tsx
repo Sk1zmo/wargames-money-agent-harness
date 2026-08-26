@@ -1,4 +1,5 @@
-import { getDb, runMigrations } from "@/db/client";
+import { getDb } from "@/db/client";
+import { ensureBootstrapped } from "@/db/bootstrap";
 import { queryAudit } from "@/audit/service";
 import { Empty, Panel } from "@/ui/primitives";
 
@@ -12,7 +13,7 @@ const SEVERITY_COLOR: Record<string, string> = {
 };
 
 export default async function AuditPage() {
-  await runMigrations();
+  await ensureBootstrapped();
   const db = await getDb();
   const events = await queryAudit(db, { limit: 200 });
 

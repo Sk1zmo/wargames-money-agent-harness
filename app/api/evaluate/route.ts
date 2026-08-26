@@ -5,7 +5,7 @@ import { runSelfEvaluation } from "@/scoring/self-evaluation";
 import { AppError } from "@/shared/errors";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300;
+export const maxDuration = 60;
 
 const EvaluateSchema = z.object({
   suiteId: z.string().min(1).optional(),

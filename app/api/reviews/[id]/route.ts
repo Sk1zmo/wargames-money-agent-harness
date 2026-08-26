@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getDb, runMigrations } from "@/db/client";
+import { getDb } from "@/db/client";
+import { ensureBootstrapped } from "@/db/bootstrap";
 import { decideReview, reviewContext } from "@/reviews/service";
 import { AppError } from "@/shared/errors";
 import { newCorrelationId } from "@/shared/ids";
@@ -15,7 +16,7 @@ export async function GET(
   const correlationId = newCorrelationId();
   try {
     const { id } = await context.params;
-    await runMigrations();
+    await ensureBootstrapped();
     const db = await getDb();
     return NextResponse.json(await reviewContext(db, id));
   } catch (error) {
@@ -64,7 +65,7 @@ export async function POST(
       });
     }
 
-    await runMigrations();
+    await ensureBootstrapped();
     const db = await getDb();
     const review = await decideReview(db, { reviewId: id, correlationId, ...parsed.data });
     return NextResponse.json({ review });

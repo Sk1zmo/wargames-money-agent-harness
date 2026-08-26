@@ -1,0 +1,16 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "functions": {
+    "app/api/certify/route.ts": { "maxDuration": 60 },
+    "app/api/evaluate/route.ts": { "maxDuration": 60 },
+    "app/api/demo/[scenario]/route.ts": { "maxDuration": 60 }
+  },
+  "env": {
+    "HARNESS_MODE": "SIMULATED",
+    "DATABASE_URL": "pglite://:memory:",
+    "LLM_PROVIDER": "none",
+    "TARGET_TIMEOUT_MS": "4000",
+    "LOG_LEVEL": "warn"
+  }
+}

@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { asc, eq } from "drizzle-orm";
 import { CircleCheck, CircleX } from "lucide-react";
-import { getDb, runMigrations } from "@/db/client";
+import { getDb } from "@/db/client";
+import { ensureBootstrapped } from "@/db/bootstrap";
 import { certificationRuns, scenarioExecutions } from "@/db/schema";
 import type { CheckOutcome } from "@/scenarios/checks";
 import type { ClassScore } from "@/evaluation/certification";
@@ -12,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export default async function RunDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  await runMigrations();
+  await ensureBootstrapped();
   const db = await getDb();
 
   const [run] = await db

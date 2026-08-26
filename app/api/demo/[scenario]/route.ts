@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
-import { getDb, runMigrations } from "@/db/client";
+import { getDb } from "@/db/client";
+import { ensureBootstrapped } from "@/db/bootstrap";
 import { demoCatalogue, runDemo } from "@/demo/scenarios";
 import { newCorrelationId } from "@/shared/ids";
 import { jsonError } from "@/api/handler";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300;
+export const maxDuration = 60;
 
 /** Describes one demo without running it. */
 export async function GET(
@@ -42,7 +43,7 @@ export async function POST(
   const correlationId = newCorrelationId();
   try {
     const { scenario } = await context.params;
-    await runMigrations();
+    await ensureBootstrapped();
     const db = await getDb();
     const result = await runDemo(db, scenario, correlationId);
 

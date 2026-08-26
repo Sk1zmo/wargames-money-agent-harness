@@ -75,6 +75,17 @@ async function openPostgres(connectionString: string): Promise<Handle> {
 async function open(): Promise<Handle> {
   const env = getEnv();
   if (env.dbDriver === "pglite") {
+    // `pglite://:memory:` opens an ephemeral database inside the process.
+    //
+    // This exists for serverless hosts, where the filesystem is read-only apart
+    // from an ephemeral /tmp and nothing written survives an invocation anyway.
+    // Writing to disk there would fail on the first request or silently lose
+    // every row, and a deployment that looks alive while losing its data is
+    // worse than one that states the limitation.
+    if (env.pgliteInMemory) {
+      logger.debug("db_open", { driver: "pglite", dataDir: ":memory:" });
+      return openPglite(undefined);
+    }
     const dir = path.resolve(process.cwd(), env.pglitePath);
     logger.debug("db_open", { driver: "pglite", dataDir: dir });
     return openPglite(dir);

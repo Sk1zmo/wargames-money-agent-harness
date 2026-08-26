@@ -1,4 +1,5 @@
-import { getDb, runMigrations } from "@/db/client";
+import { getDb } from "@/db/client";
+import { ensureBootstrapped } from "@/db/bootstrap";
 import { listReviews, reviewCounts } from "@/reviews/service";
 import { Empty, Panel } from "@/ui/primitives";
 import { ReviewQueue } from "@/ui/review-queue";
@@ -6,7 +7,7 @@ import { ReviewQueue } from "@/ui/review-queue";
 export const dynamic = "force-dynamic";
 
 export default async function ReviewsPage() {
-  await runMigrations();
+  await ensureBootstrapped();
   const db = await getDb();
 
   const reviews = await listReviews(db, { limit: 200 });

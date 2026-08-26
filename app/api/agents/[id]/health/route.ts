@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getDb, runMigrations } from "@/db/client";
+import { getDb } from "@/db/client";
+import { ensureBootstrapped } from "@/db/bootstrap";
 import { healthCheckAgent } from "@/agents/registry";
 import { newCorrelationId } from "@/shared/ids";
 import { jsonError } from "@/api/handler";
@@ -14,7 +15,7 @@ export async function POST(
   const correlationId = newCorrelationId();
   try {
     const { id } = await context.params;
-    await runMigrations();
+    await ensureBootstrapped();
     const db = await getDb();
     const health = await healthCheckAgent(db, id, correlationId);
     return NextResponse.json({ agentId: id, ...health });

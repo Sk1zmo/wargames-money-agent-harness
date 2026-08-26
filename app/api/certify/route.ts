@@ -6,7 +6,7 @@ import { assertScenariosPresent, certify } from "@/evaluation/certification";
 import { AppError } from "@/shared/errors";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300;
+export const maxDuration = 60;
 
 const CertifySchema = z.object({
   /** An agent id, or "safe"/"vulnerable" for the bundled reference agents. */

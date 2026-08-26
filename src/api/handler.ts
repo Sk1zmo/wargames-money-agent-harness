@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getDb, runMigrations, type Database } from "../db/client";
+import { getDb, type Database } from "../db/client";
+import { ensureBootstrapped } from "../db/bootstrap";
 import { AppError, toAppError } from "../shared/errors";
 import { getEnv } from "../shared/env";
 import { newCorrelationId } from "../shared/ids";
@@ -65,7 +66,7 @@ export function route(handler: (ctx: RequestContext) => Promise<unknown>) {
     const started = performance.now();
     try {
       assertAuthorised(request);
-      await runMigrations();
+      await ensureBootstrapped();
       const db = await getDb();
       const result = await handler({ db, correlationId, log, url: new URL(request.url) });
       log.info("api_ok", {
@@ -113,7 +114,7 @@ export function bodyRoute<S extends z.ZodType>(schema: S, handler: Handler<z.inf
         });
       }
 
-      await runMigrations();
+      await ensureBootstrapped();
       const db = await getDb();
       const result = await handler(
         { db, correlationId, log, url: new URL(request.url) },

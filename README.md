@@ -312,6 +312,24 @@ No live credentials are read, and none are required.
 
 ---
 
+## Deploying
+
+`vercel.json` is configured for a serverless deploy with
+`DATABASE_URL=pglite://:memory:`. A fresh instance runs migrations and the
+deterministic seed on first request, so every page is populated without a manual
+step.
+
+**What that costs, stated plainly.** An in-memory database lives inside one
+serverless instance. Certification runs, reviews and audit events you create are
+real and fully functional *within that instance*, but they do not persist across
+a cold start and are not shared between concurrent instances. That is a genuine
+limitation of a zero-configuration demo deployment, not a hidden one.
+
+Point `DATABASE_URL` at a hosted PostgreSQL — Neon, Vercel Postgres, Supabase,
+anything speaking `postgres://` — and the identical code path gives you durable,
+shared state with no other change. That is the configuration to use for anything
+beyond a demo, and the deployment checklist in the threat model assumes it.
+
 ## Documentation
 
 | File | Contents |

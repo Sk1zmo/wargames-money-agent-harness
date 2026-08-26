@@ -104,6 +104,8 @@ export type DbDriver = "postgres" | "pglite";
 export interface AppEnv extends RawEnv {
   dbDriver: DbDriver;
   pglitePath: string;
+  /** True when PGlite should run entirely in memory (serverless hosts). */
+  pgliteInMemory: boolean;
   /** True only when a provider AND an API key are both present. */
   modelJudgeEnabled: boolean;
   /** True when the Python evaluation service URL is configured. */
@@ -123,10 +125,14 @@ function derive(raw: RawEnv): AppEnv {
     ? url.replace(/^pglite:\/\//, "").replace(/^file:/, "") || "./.data/harness"
     : "";
 
+  const inMemory =
+    isPglite && (pglitePath === ":memory:" || pglitePath === "memory" || pglitePath === "");
+
   return {
     ...raw,
     dbDriver: isPglite ? "pglite" : "postgres",
     pglitePath,
+    pgliteInMemory: inMemory,
     modelJudgeEnabled: raw.LLM_PROVIDER !== "none" && raw.LLM_API_KEY.trim().length > 0,
     evalServiceConfigured: raw.JUDGE_SERVICE_URL.trim().length > 0,
     adapterAllowedHosts: raw.ADAPTER_ALLOWED_HOSTS.split(",")

@@ -1,5 +1,6 @@
 import { desc } from "drizzle-orm";
-import { getDb, runMigrations } from "@/db/client";
+import { getDb } from "@/db/client";
+import { ensureBootstrapped } from "@/db/bootstrap";
 import { evaluationRuns } from "@/db/schema";
 import { Bar, Empty, Metric, Panel } from "@/ui/primitives";
 import type { SelfEvaluationResult } from "@/scoring/self-evaluation";
@@ -12,7 +13,7 @@ function pct(n: number): string {
 }
 
 export default async function SelfEvaluationPage() {
-  await runMigrations();
+  await ensureBootstrapped();
   const db = await getDb();
 
   const history = await db

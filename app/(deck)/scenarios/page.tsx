@@ -1,5 +1,6 @@
 import { ShieldCheck, Target } from "lucide-react";
-import { getDb, runMigrations } from "@/db/client";
+import { getDb } from "@/db/client";
+import { ensureBootstrapped } from "@/db/bootstrap";
 import { listSuites, loadSuiteScenarios } from "@/scenarios/store";
 import { ADVISORY_CHECKS, DETERMINISTIC_CHECKS, MANDATORY_CHECKS } from "@/scenarios/checks";
 import { Empty, Panel, VerdictChip } from "@/ui/primitives";
@@ -14,7 +15,7 @@ const RISK_COLOR: Record<string, string> = {
 };
 
 export default async function ScenariosPage() {
-  await runMigrations();
+  await ensureBootstrapped();
   const db = await getDb();
 
   const suites = await listSuites(db);

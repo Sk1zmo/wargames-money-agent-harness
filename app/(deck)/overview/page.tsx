@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { desc } from "drizzle-orm";
 import { ArrowRight } from "lucide-react";
-import { getDb, runMigrations } from "@/db/client";
+import { getDb } from "@/db/client";
+import { ensureBootstrapped } from "@/db/bootstrap";
 import { certificationRuns, evaluationRuns, scenarioExecutions } from "@/db/schema";
 import type { Verdict } from "@/db/schema";
 import { Empty, Metric, Panel, VerdictChip } from "@/ui/primitives";
@@ -14,7 +15,7 @@ function pct(n: number): string {
 }
 
 export default async function OverviewPage() {
-  await runMigrations();
+  await ensureBootstrapped();
   const db = await getDb();
 
   const runs = await db
