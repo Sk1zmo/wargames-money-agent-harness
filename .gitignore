@@ -50,3 +50,9 @@ desktop.ini
 .vscode/
 *.swp
 *~
+
+# Vercel link metadata
+.vercel/
+
+.vercel
+.env*
