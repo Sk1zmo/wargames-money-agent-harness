@@ -36,8 +36,9 @@
   --color-verdict-review: #a78bfa;
   --color-verdict-inconclusive: #64748b;
 
-  --font-deck: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-readout: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  /* Self-hosted by next/font; the stacks below cover a failed load. */
+  --font-deck: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-readout: var(--font-plex-mono), ui-monospace, "SF Mono", Menlo, monospace;
 }
 
 :root {
