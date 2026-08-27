@@ -5,6 +5,8 @@ import { newCorrelationId } from "../shared/ids";
 import { ensureReferenceAgents } from "../agents/registry";
 import { generateSuite } from "../scenarios/generator";
 import { listSuites, persistSuite } from "../scenarios/store";
+import { getReferenceAgent } from "../agents/registry";
+import { certify } from "../evaluation/certification";
 
 /**
  * Makes a fresh process usable without a manual seed step.
@@ -53,7 +55,37 @@ export async function ensureBootstrapped(): Promise<void> {
     });
 
     await persistSuite(db, dev);
-    await persistSuite(db, heldOut);
+    const { suiteId: heldOutId } = await persistSuite(db, heldOut);
+
+    /*
+      Certify both reference agents during bootstrap.
+
+      On a serverless host every instance starts with an empty in-memory
+      database, so without this the wall would show fifteen IDLE tiles and the
+      certificate endpoint would correctly answer "nothing has been run". Both
+      are honest, and both are useless: a harness whose whole claim is that it
+      finds unsafe behaviour has to have found some.
+
+      Two agents, not one. The safe agent alone would give a wall of green,
+      which is exactly the wall that proves nothing -- a harness that never
+      fails anything is indistinguishable from a harness that cannot fail
+      anything. The vulnerable agent is what makes the green mean something.
+
+      Held-out split, because the development split is what the deterministic
+      checks were written against and scoring an agent on it would flatter it.
+    */
+    for (const kind of ["safe", "vulnerable"] as const) {
+      const agent = await getReferenceAgent(db, kind);
+      await certify({
+        db,
+        agent,
+        suiteId: heldOutId,
+        suiteVersion: heldOut.version,
+        scenarios: heldOut.scenarios,
+        seed: heldOut.seed,
+        correlationId,
+      });
+    }
 
     logger.info("bootstrap_complete", {
       durationMs: Date.now() - started,

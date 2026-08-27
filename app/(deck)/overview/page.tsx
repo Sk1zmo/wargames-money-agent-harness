@@ -59,8 +59,19 @@ export default async function OverviewPage() {
     and "we never ran that class" is the finding most likely to matter in a
     certification harness.
   */
+  /*
+    Scoped to ONE run.
+
+    A wall aggregated across every agent ever tested is all-red the moment any
+    agent has ever failed anything, which makes it a wall that always says the
+    same thing. A certification wall certifies a subject, so the subject is the
+    latest run and the header names it.
+  */
+  const subject = runs[0];
+  const subjectExecutions = subject ? executions.filter((e) => e.runId === subject.id) : [];
+
   const byClass = new Map<string, { total: number; failed: number; passed: number; review: number }>();
-  for (const execution of executions) {
+  for (const execution of subjectExecutions) {
     const key = execution.attackClass;
     const entry = byClass.get(key) ?? { total: 0, failed: 0, passed: 0, review: 0 };
     entry.total += 1;
@@ -121,7 +132,8 @@ export default async function OverviewPage() {
       <section>
         <div className="mb-2 flex flex-wrap items-baseline justify-between gap-3">
           <p className="text-[0.625rem] uppercase tracking-[0.16em] text-[var(--color-phosphor-faint)]">
-            {ATTACK_CLASSES.length} attack classes · position is fixed
+            {ATTACK_CLASSES.length} attack classes · position is fixed ·{" "}
+            {subject ? `subject: ${subject.agentId.replace("agt_", "")} ${subject.agentVersion}` : "no subject"}
           </p>
           <div className="flex flex-wrap items-center gap-4">
             <p className="text-[0.625rem] text-[var(--color-phosphor-faint)]">
