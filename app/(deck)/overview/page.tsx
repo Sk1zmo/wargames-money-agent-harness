@@ -3,9 +3,11 @@ import { desc } from "drizzle-orm";
 import { ArrowRight } from "lucide-react";
 import { getDb } from "@/db/client";
 import { ensureBootstrapped } from "@/db/bootstrap";
-import { certificationRuns, evaluationRuns, scenarioExecutions } from "@/db/schema";
+import { ATTACK_CLASSES, certificationRuns, evaluationRuns, scenarioExecutions } from "@/db/schema";
 import type { Verdict } from "@/db/schema";
 import { Empty, Metric, Panel, VerdictChip } from "@/ui/primitives";
+import { CertificateDownload } from "@/ui/certificate-download";
+import { Wall, type Tile } from "@/ui/wall";
 import type { SelfEvaluationResult } from "@/scoring/self-evaluation";
 
 export const dynamic = "force-dynamic";
@@ -45,8 +47,66 @@ export default async function OverviewPage() {
     .sort((a, b) => a - b);
   const p95 = latencies.length > 0 ? latencies[Math.floor(latencies.length * 0.95)] ?? 0 : 0;
 
+  /*
+    The wall.
+
+    One tile per attack class, ALWAYS all fifteen, always in the same position.
+    Position is identity: an operator learns where prompt injection sits and
+    afterwards finds it without reading.
+
+    Classes that have never been executed are shown as IDLE rather than omitted.
+    A wall that only shows what has been tested cannot show what has not been,
+    and "we never ran that class" is the finding most likely to matter in a
+    certification harness.
+  */
+  const byClass = new Map<string, { total: number; failed: number; passed: number; review: number }>();
+  for (const execution of executions) {
+    const key = execution.attackClass;
+    const entry = byClass.get(key) ?? { total: 0, failed: 0, passed: 0, review: 0 };
+    entry.total += 1;
+    if (execution.verdict === "FAIL") entry.failed += 1;
+    else if (execution.verdict === "PASS") entry.passed += 1;
+    else if (execution.verdict === "HUMAN_REVIEW" || execution.verdict === "CONDITIONAL") entry.review += 1;
+    byClass.set(key, entry);
+  }
+
+  const tiles: Tile[] = ATTACK_CLASSES.map((attackClass) => {
+    const entry = byClass.get(attackClass);
+    if (!entry || entry.total === 0) {
+      return {
+        key: attackClass.replace(/_/g, " "),
+        name: "never executed",
+        verdict: "IDLE" as const,
+        value: "—",
+        detail: "No scenario in this class has been run against any agent.",
+        href: "/scenarios",
+      };
+    }
+
+    const verdict =
+      entry.failed > 0
+        ? ("FAIL" as const)
+        : entry.review > 0
+          ? ("REVIEW" as const)
+          : ("PASS" as const);
+
+    return {
+      key: attackClass.replace(/_/g, " "),
+      name: `${entry.total} execution${entry.total === 1 ? "" : "s"}`,
+      verdict,
+      value: entry.failed > 0 ? String(entry.failed) : String(entry.passed),
+      detail:
+        entry.failed > 0
+          ? `${entry.failed} agent ${entry.failed === 1 ? "response" : "responses"} let this through.`
+          : entry.review > 0
+            ? `${entry.review} awaiting a human verdict.`
+            : "Every execution was refused correctly.",
+      href: "/runs",
+    };
+  });
+
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
         <p className="mt-1.5 max-w-2xl text-sm text-[var(--color-phosphor-dim)]">
@@ -54,6 +114,25 @@ export default async function OverviewPage() {
           seeded, cached from a previous build, or written by hand.
         </p>
       </div>
+
+      {/* --------------------------------------------------------------- */}
+      {/* The wall                                                         */}
+      {/* --------------------------------------------------------------- */}
+      <section>
+        <div className="mb-2 flex flex-wrap items-baseline justify-between gap-3">
+          <p className="text-[0.625rem] uppercase tracking-[0.16em] text-[var(--color-phosphor-faint)]">
+            {ATTACK_CLASSES.length} attack classes · position is fixed
+          </p>
+          <div className="flex flex-wrap items-center gap-4">
+            <p className="text-[0.625rem] text-[var(--color-phosphor-faint)]">
+              a red tile means an agent let something through — not that the harness failed
+            </p>
+            <CertificateDownload />
+          </div>
+        </div>
+        <Wall tiles={tiles} />
+      </section>
+
 
       {/* ---------------------------------------------------------------- */}
       {/* Instrument accuracy                                              */}
