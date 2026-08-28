@@ -1,7 +1,7 @@
 import { getDb, runMigrations } from "./client";
 import { getEnv } from "../shared/env";
 import { logger } from "../shared/logger";
-import { newCorrelationId } from "../shared/ids";
+import { newCorrelationId, withDeterministicIds } from "../shared/ids";
 import { ensureReferenceAgents } from "../agents/registry";
 import { generateSuite } from "../scenarios/generator";
 import { listSuites, persistSuite } from "../scenarios/store";
@@ -30,7 +30,7 @@ let bootstrapped: Promise<void> | null = null;
 
 export async function ensureBootstrapped(): Promise<void> {
   if (bootstrapped) return bootstrapped;
-  bootstrapped = (async () => {
+  bootstrapped = withDeterministicIds(async () => {
     const env = getEnv();
     const started = Date.now();
 
@@ -91,7 +91,7 @@ export async function ensureBootstrapped(): Promise<void> {
       durationMs: Date.now() - started,
       inMemory: env.pgliteInMemory,
     });
-  })().catch((error: unknown) => {
+  }).catch((error: unknown) => {
     // A failed bootstrap must not be cached as success, or every later request
     // would see an empty database with no explanation.
     bootstrapped = null;
