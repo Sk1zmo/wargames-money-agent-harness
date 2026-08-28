@@ -31,7 +31,7 @@ export default function Landing() {
       {/* ---------------------------------------------------------------- */}
       {/* Scene 1: the deck powers on                                      */}
       {/* ---------------------------------------------------------------- */}
-      <section className="deck-scanlines relative flex min-h-[100svh] flex-col justify-center overflow-hidden px-6">
+      <section className="deck-scanlines scene relative flex min-h-[100svh] flex-col justify-center overflow-hidden">
         <DeckBackdrop />
         <div className="deck-grid pointer-events-none absolute inset-0" aria-hidden />
 
@@ -48,7 +48,7 @@ export default function Landing() {
           </div>
 
           <h1
-            className="deck-boot mt-6 text-balance text-4xl font-bold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl"
+            className="deck-boot hero-title mt-6 text-balance font-bold tracking-tight"
             style={{ animationDelay: "220ms" }}
           >
             Would you give this agent
@@ -111,11 +111,11 @@ export default function Landing() {
       {/* ---------------------------------------------------------------- */}
       {/* Scene 2: the fifteen classes boot in sequence                    */}
       {/* ---------------------------------------------------------------- */}
-      <section className="relative border-t border-[var(--color-deck-line)] px-6 py-28">
+      <section className="scene scene-block relative border-t border-[var(--color-deck-line)]">
         <div className="mx-auto max-w-6xl">
           <Reveal>
             <span className="deck-label">Attack surface</span>
-            <h2 className="mt-3 max-w-3xl text-balance text-3xl font-semibold leading-tight sm:text-4xl">
+            <h2 className="scene-title mt-3 max-w-3xl text-balance font-semibold leading-tight">
               Fifteen ways a payment agent goes wrong
             </h2>
             <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[var(--color-phosphor-dim)]">
@@ -166,11 +166,11 @@ export default function Landing() {
       {/* ---------------------------------------------------------------- */}
       {/* Scene 3: the verdict board                                       */}
       {/* ---------------------------------------------------------------- */}
-      <section className="relative border-t border-[var(--color-deck-line)] px-6 py-28">
+      <section className="scene scene-block relative border-t border-[var(--color-deck-line)]">
         <div className="mx-auto max-w-6xl">
           <Reveal>
             <span className="deck-label">Verdict engine</span>
-            <h2 className="mt-3 max-w-3xl text-balance text-3xl font-semibold leading-tight sm:text-4xl">
+            <h2 className="scene-title mt-3 max-w-3xl text-balance font-semibold leading-tight">
               Uncertainty never becomes a pass
             </h2>
             <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[var(--color-phosphor-dim)]">
@@ -180,7 +180,7 @@ export default function Landing() {
             </p>
           </Reveal>
 
-          <div className="mt-10 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="auto-cards-sm mt-10 gap-2">
             {(Object.keys(VERDICT_META) as Array<keyof typeof VERDICT_META>).map((v, i) => {
               const meta = VERDICT_META[v];
               const Icon = meta.icon;
@@ -224,11 +224,11 @@ export default function Landing() {
       {/* ---------------------------------------------------------------- */}
       {/* Scene 4: what this does not establish                            */}
       {/* ---------------------------------------------------------------- */}
-      <section className="relative border-t border-[var(--color-deck-line)] px-6 py-28">
+      <section className="scene scene-block relative border-t border-[var(--color-deck-line)]">
         <div className="mx-auto max-w-3xl">
           <Reveal>
             <span className="deck-label">Limits</span>
-            <h2 className="mt-3 text-balance text-3xl font-semibold leading-tight sm:text-4xl">
+            <h2 className="scene-title mt-3 text-balance font-semibold leading-tight">
               What a PASS does not mean
             </h2>
             <div className="mt-6 space-y-4 text-sm leading-relaxed text-[var(--color-phosphor-dim)]">
@@ -272,7 +272,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <footer className="border-t border-[var(--color-deck-line)] px-6 py-8">
+      <footer className="scene border-t border-[var(--color-deck-line)] py-8">
         <div className="deck-readout mx-auto flex max-w-6xl flex-wrap gap-x-6 gap-y-2 text-[0.7rem] text-[var(--color-phosphor-faint)]">
           <span>mode {env.harnessMode}</span>
           <span>live money reachable: no</span>

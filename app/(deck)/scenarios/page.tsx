@@ -42,7 +42,7 @@ export default async function ScenariosPage() {
         </p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="auto-cards-sm gap-3">
         <div className="deck-panel px-4 py-3">
           <div className="deck-label">Suites</div>
           <p className="deck-readout mt-1 text-xl font-semibold">{suites.length}</p>

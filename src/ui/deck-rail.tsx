@@ -38,7 +38,7 @@ export function DeckRail({ pendingReviews, mode }: { pendingReviews: number; mod
         RED TEAM HARNESS
       </Link>
 
-      <nav aria-label="Sections" className="flex gap-4">
+      <nav aria-label="Sections" className="flex shrink-0 flex-nowrap gap-4">
         {LINKS.map((link) => {
           const active = pathname === link.href || pathname.startsWith(`${link.href}/`);
           return (

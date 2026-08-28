@@ -41,7 +41,7 @@ export default async function AuditPage() {
             command="npm run db:seed"
           />
         ) : (
-          <div className="-mx-4 overflow-x-auto">
+          <div className="panel-bleed overflow-x-auto">
             <table className="w-full min-w-[54rem] text-sm">
               <thead>
                 <tr className="border-b border-[var(--color-deck-line)] text-left">

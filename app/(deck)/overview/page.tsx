@@ -151,7 +151,7 @@ export default async function OverviewPage() {
       {/* ---------------------------------------------------------------- */}
       {metrics ? (
         <>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="auto-cards gap-3">
             <Metric
               label="Detection rate"
               value={pct(metrics.detection.rate)}
@@ -217,7 +217,7 @@ export default async function OverviewPage() {
             command="npm run certify -- --agent vulnerable"
           />
         ) : (
-          <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="auto-cards-sm gap-2">
             {(
               ["PASS", "FAIL", "CONDITIONAL", "HUMAN_REVIEW", "INCONCLUSIVE"] as Verdict[]
             ).map((v) => (
@@ -251,7 +251,7 @@ export default async function OverviewPage() {
             command="npm run certify -- --agent safe --split held-out"
           />
         ) : (
-          <div className="-mx-4 overflow-x-auto">
+          <div className="panel-bleed overflow-x-auto">
             <table className="w-full min-w-[46rem] text-sm">
               <thead>
                 <tr className="border-b border-[var(--color-deck-line)] text-left">

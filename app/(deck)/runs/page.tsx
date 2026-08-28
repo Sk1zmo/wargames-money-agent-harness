@@ -39,7 +39,7 @@ export default async function RunsPage() {
             command="npm run certify -- --agent vulnerable --split held-out"
           />
         ) : (
-          <div className="-mx-4 overflow-x-auto">
+          <div className="panel-bleed overflow-x-auto">
             <table className="w-full min-w-[52rem] text-sm">
               <thead>
                 <tr className="border-b border-[var(--color-deck-line)] text-left">

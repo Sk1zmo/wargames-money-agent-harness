@@ -50,7 +50,7 @@ export default async function DeveloperPage() {
         </Panel>
       )}
 
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="auto-cards-lg gap-3">
         <Panel title="Environment">
           <dl className="space-y-1.5 text-xs">
             {[
@@ -195,7 +195,7 @@ export default async function DeveloperPage() {
       </Panel>
 
       <Panel title="API">
-        <div className="-mx-4 overflow-x-auto">
+        <div className="panel-bleed overflow-x-auto">
           <table className="w-full min-w-[38rem] text-xs">
             <tbody>
               {ROUTES.map(([method, path, description]) => (

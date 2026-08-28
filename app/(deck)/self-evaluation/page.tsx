@@ -95,7 +95,7 @@ export default async function SelfEvaluationPage() {
           )}
 
           <Panel title="Per attack class">
-            <div className="-mx-4 overflow-x-auto">
+            <div className="panel-bleed overflow-x-auto">
               <table className="w-full min-w-[40rem] text-sm">
                 <thead>
                   <tr className="border-b border-[var(--color-deck-line)] text-left">

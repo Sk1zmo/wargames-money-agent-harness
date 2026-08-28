@@ -31,7 +31,9 @@ export default async function DeckLayout({ children }: { children: React.ReactNo
   return (
     <div className="min-h-screen bg-[var(--color-deck-void)]">
       <DeckRail pendingReviews={pending} mode={env.harnessMode ?? "SIMULATED"} />
-      <main className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6">{children}</main>
+      {/* The gutter lives in the `page` class, not in utilities: a Tailwind
+          px-* sits in a later cascade layer and would silently beat it. */}
+      <main className="page py-6">{children}</main>
     </div>
   );
 }

@@ -92,7 +92,7 @@ export function Panel({
   return (
     <section className={`deck-panel ${alerting ? "deck-alerting" : ""} ${className}`}>
       {(title || action) && (
-        <header className="flex items-start justify-between gap-4 border-b border-[var(--color-deck-line)] px-4 py-3">
+        <header className="panel-head flex items-start justify-between gap-4 border-b border-[var(--color-deck-line)]">
           <div className="min-w-0">
             {title && <h2 className="deck-label">{title}</h2>}
             {subtitle && (
@@ -102,7 +102,7 @@ export function Panel({
           {action}
         </header>
       )}
-      <div className="p-4">{children}</div>
+      <div className="panel-body">{children}</div>
     </section>
   );
 }
@@ -130,7 +130,7 @@ export function Metric({
   return (
     <div className="deck-panel px-4 py-3">
       <div className="deck-label">{label}</div>
-      <div className="deck-readout mt-1.5 text-2xl font-semibold" style={{ color }}>
+      <div className="deck-figure mt-1.5 font-semibold" style={{ color }}>
         {value}
       </div>
       {hint && (

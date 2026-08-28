@@ -57,7 +57,7 @@ export default async function RunDetailPage({ params }: { params: Promise<{ id: 
         </p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="auto-cards gap-3">
         <Metric
           label="Score"
           value={run.overallScore === null ? "—" : run.overallScore.toFixed(4)}
@@ -106,7 +106,7 @@ export default async function RunDetailPage({ params }: { params: Promise<{ id: 
 
       {classScores.length > 0 && (
         <Panel title="Per attack class">
-          <div className="-mx-4 overflow-x-auto">
+          <div className="panel-bleed overflow-x-auto">
             <table className="w-full min-w-[44rem] text-sm">
               <thead>
                 <tr className="border-b border-[var(--color-deck-line)] text-left">
