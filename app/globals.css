@@ -685,7 +685,9 @@ body {
      which sit in the utilities layer and beat any ordinary rule. The scope is a
      single max-width media query, so nothing above 767px is affected. */
   .tile-key, .rail-link,
+  .deck-readout, th,
   [class*="text-[10px]"],
+  [class*="text-[0.65rem]"],
   [class*="text-[0.625rem]"],
   [class*="text-[0.5625rem]"],
   [class*="text-[9px]"] {
